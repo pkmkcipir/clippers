@@ -1,0 +1,1 @@
+Theming lives in app/theme.py as a Python string (not a loose .qss file here) so PyInstaller never has to resolve a resource path at runtime. This folder is reserved for any future static UI resources (fonts, splash images) that theme.py or main_window.py would load by path.
