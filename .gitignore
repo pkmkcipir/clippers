@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+
+# PyInstaller build output
+/build/*
+!/build/README.md
+/dist/
+
+# Downloaded/generated ffmpeg binaries
+/ffmpeg/*.exe
+!ffmpeg/README.md
+
+# Logs & temp
+/logs/*.log
+/temp/*
+!temp/README.md
+
+# Local DB / user data
+*.db
+*.sqlite3
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

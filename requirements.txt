@@ -1,0 +1,27 @@
+# AI Klipers -- runtime dependencies
+# Install with:  pip install -r requirements.txt
+
+PySide6>=6.6.0
+
+# yt-dlp for YouTube import. Only download content you own or have the
+# rights to redistribute -- see README.md "Legal note".
+yt-dlp>=2024.4.9
+
+# Speech-to-text. Uses ctranslate2 under the hood (NOT torch), which keeps
+# the install and the eventual .exe considerably smaller.
+faster-whisper>=1.0.1
+
+# IMPORTANT: use the *headless* OpenCV build, not `opencv-python`.
+# Regular opencv-python bundles its own Qt plugins, which collide with
+# PySide6's Qt at runtime (classic "which libqcocoa/xcb do I load" crash).
+# opencv-python-headless has no GUI code and no bundled Qt, so the two
+# coexist fine.
+opencv-python-headless>=4.9.0
+
+numpy>=1.26.0
+SQLAlchemy>=2.0.0
+psutil>=5.9.0
+
+# Note: ffmpeg/ffprobe themselves are NOT a pip package -- see README.md
+# for how to get a static build into the ffmpeg/ folder (or install
+# system-wide and rely on PATH during development).

@@ -1,0 +1,7 @@
+# Build & test tooling -- not needed to just run the app from source.
+# Install with:  pip install -r requirements-dev.txt
+
+-r requirements.txt
+pyinstaller>=6.5.0
+pytest>=8.0.0
+Pillow>=10.0.0
