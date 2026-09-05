@@ -1,0 +1,79 @@
+name: Build Windows EXE
+
+# Builds AI Klipers into a Windows .exe using PyInstaller, every time you:
+#   - push to main/master
+#   - push a version tag like v1.0.0  (this ALSO publishes a GitHub Release with the zip attached)
+#   - manually trigger it from the Actions tab ("Run workflow")
+on:
+  push:
+    branches: [main, master]
+    tags: ["v*"]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    # PyInstaller does not cross-compile: a Windows .exe must be built on a
+    # Windows runner. GitHub provides these for free on public repos.
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Download static ffmpeg (for a self-contained build)
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          New-Item -ItemType Directory -Force -Path ffmpeg | Out-Null
+          Invoke-WebRequest -Uri "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip" -OutFile ffmpeg.zip
+          Expand-Archive -Path ffmpeg.zip -DestinationPath ffmpeg_extracted -Force
+          $bin = Get-ChildItem -Path ffmpeg_extracted -Recurse -Filter "ffmpeg.exe" | Select-Object -First 1
+          if ($bin) {
+            Copy-Item $bin.FullName -Destination "ffmpeg\ffmpeg.exe" -Force
+            $probe = Join-Path $bin.Directory.FullName "ffprobe.exe"
+            if (Test-Path $probe) { Copy-Item $probe -Destination "ffmpeg\ffprobe.exe" -Force }
+          }
+
+      - name: Build with PyInstaller
+        run: pyinstaller build_exe.spec --noconfirm
+
+      - name: Zip the build output
+        shell: pwsh
+        run: Compress-Archive -Path "dist/AI Klipers/*" -DestinationPath "AI-Klipers-windows.zip"
+
+      # Available on every run, even normal pushes/PRs -- download it from
+      # the workflow run's "Summary" page under "Artifacts".
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AI-Klipers-windows
+          path: dist/AI Klipers/**
+
+      - name: Upload zipped build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AI-Klipers-windows-zip
+          path: AI-Klipers-windows.zip
+
+      # Only when the push was a version tag (e.g. "v1.0.0"), also publish a
+      # GitHub Release with the zip attached, so users can just click download.
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: AI-Klipers-windows.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
